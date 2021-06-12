@@ -61,7 +61,7 @@ class PictureButton(QLabel):
 
     def __init__(self, *args, way=None, **kwargs):
         super().__init__(*args, *kwargs)
-        self.icon = QIcon('icons/arrow.svg') if not way else QIcon(way)
+        self.icon = QIcon('icons/arrow.ico') if not way else QIcon(way)
         # Так как увеличение размера QLabel не увеличит картинку,
         # находящуюся в нём (PixMap) Растянем картинку отдельно от QLabel,
         # потому как её формат (svg - формат векторного изображения) позволяет нам сделать это.
@@ -394,7 +394,7 @@ class MainWindow(QMainWindow):
         # потому как её формат (svg - формат векторного изображения) позволяет нам сделать это.
         self.pix = self.icon.pixmap(QSize(SIZE // 20, SIZE // 20))
         '''
-        arrows_pix = QIcon('icons/keyboard.svg').pixmap(QSize(SIZE // 3, SIZE // 3))
+        arrows_pix = QIcon('icons/keyboard.ico').pixmap(QSize(SIZE // 3, SIZE // 3))
         arrows = QLabel(self)
         arrows.resize(SIZE // 3, SIZE // 3)
         arrows.move(SIZE // 25, SIZE // 20 + SIZE // 50)
