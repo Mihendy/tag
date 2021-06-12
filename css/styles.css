@@ -1,0 +1,61 @@
+QMainWindow {
+    background-color: white;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+SubTitle {
+    color: black;
+    font-size: 20pt;
+    border: 2px solid black;
+    border-radius: 10px;
+}
+
+SubTitle:hover {
+    border-radius: 15px;
+    font-size: 15pt;
+}
+
+Title {
+    background-color: black;
+    color: white;
+    font-bold: bold;
+    font-size: 35pt;
+    border-radius: 10px;
+}
+
+Title:hover {
+    border-radius: 15px;
+}
+
+QStatusBar {
+    background: white;
+    color: black;
+    font-size: 8pt;
+    font-bold: bold;
+}
+
+QHBoxLayout {
+    border: 2px solid black;
+}
+
+QSlider::groove:horizontal {
+    height: 10px;
+    margin: 0px;
+    border-radius: 5px;
+    background: #B0AEB1;
+}
+
+QSlider::handle:horizontal {
+    background: #fff;
+    border: 1px solid #E3DEE2;
+    width: 17px;
+    margin: -5px 0;
+    border-radius: 8px;
+}
+
+QSlider::sub-page:qlineargradient {
+    background: #ff7e00;
+}
