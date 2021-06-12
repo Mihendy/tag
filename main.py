@@ -515,6 +515,7 @@ class MainWindow(QMainWindow):
             else:
                 self.statusBar().showMessage(VERSION)
                 return
+        self.clear_window()
         # "разрезаем" изображение и и раскладываем каждый в свой pixmap
         pix_map = pix_map.scaled(SIZE, SIZE)
         self.n = int(self.number_of_bricks ** 0.5)
