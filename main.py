@@ -5,10 +5,11 @@ from random import choice
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QRect, Qt, QSize
-from PyQt5.QtGui import QIcon, QPixmap, QKeyEvent, QColor, QFont
+from PyQt5.QtGui import QIcon, QPixmap, QKeyEvent, QColor, QFont, QPainter, QPen
 from PyQt5.QtWidgets import QApplication, QPushButton, QLabel, \
     QMainWindow, QFileDialog, QInputDialog, QComboBox, \
-    QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QPlainTextEdit
+    QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QPlainTextEdit, \
+    QGraphicsDropShadowEffect
 
 # В файле tools.py хранятся вспомогательные функции для работы с приложением,
 # а также важные константы импортируем их:
@@ -22,6 +23,16 @@ def win_check(matrix):
             if (i, j) != matrix[i][j]:
                 return False
     return True
+
+
+def blur(obj, color: QColor):
+    """Эффект теневого размытия"""
+    shadow = QGraphicsDropShadowEffect()
+    shadow.setBlurRadius(10)
+    shadow.setXOffset(0)
+    shadow.setYOffset(0)
+    shadow.setColor(color)
+    obj.setGraphicsEffect(shadow)
 
 
 """
@@ -50,10 +61,6 @@ class Frame(QLabel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, *kwargs)
-        self.setStyleSheet("""
-                    background-color: white;
-                    border: 2px solid black;
-        """)
 
 
 class PictureButton(QLabel):
@@ -61,7 +68,10 @@ class PictureButton(QLabel):
 
     def __init__(self, *args, way=None, **kwargs):
         super().__init__(*args, *kwargs)
-        self.icon = QIcon('icons/arrow.ico') if not way else QIcon(way)
+        if not way:
+            self.icon = QIcon('icons/arrow.ico')
+        else:
+            self.icon = QIcon(way)
         # Так как увеличение размера QLabel не увеличит картинку,
         # находящуюся в нём (PixMap) Растянем картинку отдельно от QLabel,
         # потому как её формат (svg - формат векторного изображения) позволяет нам сделать это.
@@ -113,10 +123,9 @@ class SubTitle(QLabel):
         self.move((SIZE - self.size().width()) // 2, SIZE // 100)
         self.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
         self.setFont(COOL_FONT)
-        self.setStyleSheet(f'''
-                            color: black;
-                            font-size: {SIZE // 25}pt;
-                        ''')
+        self.setStyleSheet(f'''font-size: {SIZE // 25}pt;''')
+        color = QColor('gray' if args[1].dark_mode else 'black')
+        blur(self, color)
 
 
 class MyButton(QPushButton):
@@ -125,50 +134,17 @@ class MyButton(QPushButton):
     def __init__(self, *args, **kwargs):
         """Инициализация стилей кнопки"""
         super().__init__(*args, *kwargs)
-        # if DARK_MODE:
-        #     self.setStyleSheet(f"""
-        #             background: #1a1a1a;
-        #             color: #e8e8e8;
-        #             border-radius: {SIZE // 50 + SIZE // 100}px;
-        #     """)
-        # else:
-        self.setStyleSheet(f"""
-                background: #f5f5f5;
-                color: grey;
-                border-radius: {SIZE // 50 + SIZE // 100}px;
-        """)
+        self.setStyleSheet(f'border-radius: {SIZE // 50 + SIZE // 100}px;')
+        color = QColor('gray' if args[1].dark_mode else 'black')
+        blur(self, color)
 
     def enterEvent(self, event):
         """Изменение стилей кнопки при наведении"""
         QApplication.setOverrideCursor(QtCore.Qt.PointingHandCursor)
-        # if DARK_MODE:
-        #     self.setStyleSheet(f"""
-        #             background: #f5f5f5;
-        #             color: #1a1a1a;
-        #             border-radius: {SIZE // 50 + SIZE // 100}px;
-        #     """)
-        # else:
-        self.setStyleSheet(f"""
-                background: grey;
-                color: #f5f5f5;
-                border-radius: {SIZE // 50 + SIZE // 100}px;
-        """)
 
     def leaveEvent(self, event):
         """Установка начальных стилей для кнопки при снятии курсора с неё"""
         QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
-        # if DARK_MODE:
-        #     self.setStyleSheet(f"""
-        #             background: #1a1a1a;
-        #             color: #e8e8e8;
-        #             border-radius: {SIZE // 50 + SIZE // 100}px;
-        #     """)
-        # else:
-        self.setStyleSheet(f"""
-                background: #f5f5f5;
-                color: grey;
-                border-radius: {SIZE // 50 + SIZE // 100}px;
-        """)
 
 
 class MainWindow(QMainWindow):
@@ -190,10 +166,13 @@ class MainWindow(QMainWindow):
             "settings": [],
             "leader_board": [],
             "tips": []}
+
         self.setWindowTitle('Пятнашки')
         self.setGeometry(100, 100, 0, 0)
         self.setFixedSize(SIZE, SIZE)
         self.in_progress = True
+        self.is_drawing = False
+        self.dark_mode = False
         self.setWindowIcon(QIcon('icons/Window_icon.jpg'))
         self.statusBar().showMessage(VERSION)
         # В игре существуют режимы сложности, градация которых
@@ -208,7 +187,10 @@ class MainWindow(QMainWindow):
         self.cords_mtx = []
         QtGui.QFontDatabase.addApplicationFont("fonts/HoboStd.otf")
         self.init_ui()
-        self.setStyleSheet(open('css/styles.CSS').read())
+        if self.dark_mode:
+            self.setStyleSheet(open('css/_styles.CSS').read())
+        else:
+            self.setStyleSheet(open('css/styles.CSS').read())
 
     def clear_window(self):
         """Скрытие всех элементов с экрана приложения"""
@@ -224,16 +206,12 @@ class MainWindow(QMainWindow):
         """Инициализация вспомогательных окон приложения (всех кроме окна игры)"""
 
         """ ИНИЦИАЛИЗАЦИЯ МЕНЮ """
-        name_of_game = QLabel('Пятнашки', self)
+        name_of_game = Title('Пятнашки', self)
         name_of_game.resize(SIZE // 5 * 2 + SIZE // 25, SIZE // 50 * 6)
         name_of_game.move((SIZE - name_of_game.size().width()) // 2, SIZE // 5)
         name_of_game.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
         name_of_game.setFont(COOL_FONT)
-        name_of_game.setStyleSheet(f'''
-                            color: black;
-                            font-size: {SIZE // 25 + SIZE // 60}pt;
-                            border-radius: {SIZE // 100}px;
-        ''')
+        name_of_game.setStyleSheet(f'font-size: {SIZE // 25 + SIZE // 60}pt;')
 
         self.window_widgets["main_menu"].append(name_of_game)
 
@@ -280,7 +258,10 @@ class MainWindow(QMainWindow):
 
         """ ИНИЦИАЛИЗАЦИЯ НАСТРОЕК ПРИЛОЖЕНИЯ (Сложности игры) """
 
-        go_to_menu_btn = PictureButton(self)
+        if self.dark_mode:
+            go_to_menu_btn = PictureButton(self, way='icons/_arrow.ico')
+        else:
+            go_to_menu_btn = PictureButton(self)
         go_to_menu_btn.id = GO_TO_MAIN_MENU_BTN_ID
         go_to_menu_btn.installEventFilter(self)
 
@@ -333,6 +314,15 @@ class MainWindow(QMainWindow):
         difficulty_hard.installEventFilter(self)
 
         self.window_widgets["settings"].append(difficulty_hard)
+
+        dark_button = MyButton('', self)
+        dark_button.id = DARK_MODE_BTN_ID
+        dark_button.setFont(COOL_FONT)
+        dark_button.resize(SIZE // 10, SIZE // 10)
+        dark_button.move(SIZE // 100 * 95, SIZE // 100 * 95)
+        dark_button.installEventFilter(self)
+
+        self.window_widgets["settings"].append(dark_button)
 
         # ---регулеровка звука с помощью слайдеров (работа с PyQTGraph в будующем)---
         # volume_lbl = QLabel('Звук', self)
@@ -421,16 +411,25 @@ class MainWindow(QMainWindow):
         # reference.resize(480, 305)
         reference.resize(int(SIZE // 1.25 + SIZE // 6.25), int(SIZE // 1.6 + SIZE // 100))
         reference.move(SIZE // 50, int(SIZE // 5 + SIZE // 6.6))
-        reference.setStyleSheet(
-            """
-                            color: black;
-                            border: 1px solid black;
-                            border-radius: 5px;
-                            background: #d4d4d4;
-            """)
+        if self.dark_mode:
+            reference.setStyleSheet(
+                """
+                                color: black;
+                                border: 1px solid white;
+                                border-radius: 5px;
+                                background: gray;
+                """)
+        else:
+            reference.setStyleSheet(
+                """
+                                color: black;
+                                border: 1px solid black;
+                                border-radius: 5px;
+                                background: #d4d4d4;
+                """)
         reference.setFont(QFont("fonts/HoboStd.odt", 15))
         reference.setReadOnly(True)
-        reference.setPlainText(open("data/Reference.txt", 'r', encoding='utf8').read())
+        reference.setPlainText(open("ref/Reference.txt", 'r', encoding='utf8').read())
 
         self.window_widgets["tips"].append(reference)
 
@@ -447,15 +446,28 @@ class MainWindow(QMainWindow):
         section_title.setStyleSheet(f'''font-size: {SIZE // 30}pt;''')
         self.window_widgets["leader_board"].append(section_title)
         self.sort_by_difficulty = QComboBox(self)
-        self.sort_by_difficulty.setStyleSheet("""
-            background-color:  white;
-            QComboBox::down-arrow
-                                     {
-                                     border : solid black;
-                                     border-width : 5px 1px 10px 3px;
-                                     };
-        border:                 none;
-         """)
+        if self.dark_mode:
+            self.sort_by_difficulty.setStyleSheet("""
+                        background-color:  #cfcfcf;
+                        QComboBox::down-arrow
+                                                 {
+                                                 border : 2px solid black;
+                                                 border-width : 5px 1px 10px 3px;
+                                                 color: #cfcfcf
+                                                 };
+                    border:                 none;
+                     """)
+        else:
+            self.sort_by_difficulty.setStyleSheet("""
+                background-color:  white;
+                QComboBox::down-arrow
+                                         {
+                                         border : 2px solid black;
+                                         border-width : 5px 1px 10px 3px;
+                                         };
+            border:                 none;
+             """)
+
         self.sort_by_difficulty.resize(SIZE // 25 * 4, SIZE // 20)
         self.sort_by_difficulty.move(SIZE // 5 * 4 + SIZE // 50 + SIZE // 100,
                                      SIZE // 20 + SIZE // 50)
@@ -467,7 +479,7 @@ class MainWindow(QMainWindow):
         self.window_widgets["leader_board"].append(self.sort_by_difficulty)
 
         self.leader_board = QTableWidget(self)
-        self.leader_board.setFixedSize(SIZE, SIZE)
+        self.leader_board.setFixedSize(SIZE + 3, SIZE - (SIZE // 50 * 6))
         self.leader_board.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.leader_board.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.leader_board.move(0, SIZE // 50 * 6)
@@ -490,6 +502,7 @@ class MainWindow(QMainWindow):
         self.in_progress = False
         file_name = self.dialog()
         if not file_name:
+            self.in_progress = True
             return
 
         pix_map = QPixmap(file_name)
@@ -514,6 +527,7 @@ class MainWindow(QMainWindow):
                     self.clear_window()
             else:
                 self.statusBar().showMessage(VERSION)
+                self.in_progress = True
                 return
         self.clear_window()
         # "разрезаем" изображение и и раскладываем каждый в свой pixmap
@@ -608,7 +622,7 @@ class MainWindow(QMainWindow):
                 self.cords_mtx[x][y], self.cords_mtx[x][y - 1] = \
                     self.cords_mtx[x][y - 1], self.cords_mtx[x][y]
                 self.window_widgets["game"][x][y], \
-                    self.window_widgets["game"][x][y - 1] = \
+                self.window_widgets["game"][x][y - 1] = \
                     self.window_widgets["game"][x][y - 1], \
                     self.window_widgets["game"][x][y]
 
@@ -625,7 +639,7 @@ class MainWindow(QMainWindow):
                 self.cords_mtx[x][y], self.cords_mtx[x][y + 1] = \
                     self.cords_mtx[x][y + 1], self.cords_mtx[x][y]
                 self.window_widgets["game"][x][y], \
-                    self.window_widgets["game"][x][y + 1] = \
+                self.window_widgets["game"][x][y + 1] = \
                     self.window_widgets["game"][x][y + 1], \
                     self.window_widgets["game"][x][y]
                 self.start_pos = (x, y + 1)
@@ -638,7 +652,7 @@ class MainWindow(QMainWindow):
                 self.cords_mtx[x][y], self.cords_mtx[x - 1][y] = \
                     self.cords_mtx[x - 1][y], self.cords_mtx[x][y]
                 self.window_widgets["game"][x][y], \
-                    self.window_widgets["game"][x - 1][y] = \
+                self.window_widgets["game"][x - 1][y] = \
                     self.window_widgets["game"][x - 1][y], \
                     self.window_widgets["game"][x][y]
                 self.start_pos = (x - 1, y)
@@ -651,7 +665,7 @@ class MainWindow(QMainWindow):
                 self.cords_mtx[x][y], self.cords_mtx[x + 1][y] = \
                     self.cords_mtx[x + 1][y], self.cords_mtx[x][y]
                 self.window_widgets["game"][x][y], \
-                    self.window_widgets["game"][x + 1][y] = \
+                self.window_widgets["game"][x + 1][y] = \
                     self.window_widgets["game"][x + 1][y], \
                     self.window_widgets["game"][x][y]
                 self.start_pos = (x + 1, y)
@@ -752,17 +766,31 @@ class MainWindow(QMainWindow):
                 self.clear_window()
                 self.statusBar().showMessage(VERSION)
                 self.show_widgets("main_menu")
-            # elif QObject.id == SWITCH_MODE_BTN_ID:
-            #     self.set_mode()
+            elif obj.id == DARK_MODE_BTN_ID:
+                self.dark_mode = not self.dark_mode
+                self.clear_window()
+                self.window_widgets = {
+                    "main_menu": [],
+                    "game": [],
+                    "settings": [],
+                    "leader_board": [],
+                    "tips": []}
+                self.init_ui()
+                if self.dark_mode:
+                    self.setStyleSheet(open('css/_styles.CSS').read())
+                else:
+                    self.setStyleSheet(open('css/styles.CSS').read())
+                self.clear_window()
+                self.show_widgets("settings")
             return True
         return False
 
     # функции для работы с тёмной темой для след. версии:
 
     # def set_mode(self):
-    #     global DARK_MODE
-    #     if not DARK_MODE:
-    #         DARK_MODE = True
+    #     global self.DARK_MODE
+    #     if not self.DARK_MODE:
+    #         self.DARK_MODE = True
     #         self.setStyleSheet(open('data/dark_styles.css').read())
     #         for i in self.window_widgets:
     #             for j in self.window_widgets[i]:
@@ -778,7 +806,7 @@ class MainWindow(QMainWindow):
     #                             color: #f5f5f5;
     #                     """)
     #     else:
-    #         DARK_MODE = False
+    #         self.DARK_MODE = False
     #         self.setStyleSheet(open('data/styles.css').read())
     #         for i in self.window_widgets:
     #             for j in self.window_widgets[i]:
@@ -841,6 +869,7 @@ class MainWindow(QMainWindow):
                 self.window_widgets["game"] = []
                 self.cords_mtx = []
                 self.show_widgets("main_menu")
+                self.statusBar().showMessage(VERSION)
                 self.setFixedSize(SIZE, SIZE)
 
     def change_difficulty(self, btn):
@@ -863,9 +892,34 @@ class MainWindow(QMainWindow):
                                            '(*.jpg *.png *.gif *.tif *.tiff'
                                            ' *.bmp *.jpeg *.dib *.raw *.svg)')[0]
 
+    def do_draw(self):
+        self.is_drawing = True
+        for i in range(SIZE * 2):
+            self._i = i
+            self.repaint()
+        self.is_drawing = False
+
+    def paintEvent(self, event):
+        if self.is_drawing:
+            qp = QPainter()
+            qp.begin(self)
+            self.modeChangeAnimation(qp, SIZE, SIZE, self._i, self._i)
+            qp.end()
+
+    def modeChangeAnimation(self, qp, x, y, w, h):
+        color = QColor('#121212')
+        qp.setPen(QPen(color, -1))
+        qp.setBrush(color)
+        qp.drawEllipse(x, y, w, h)
+
+
+def except_hook(cls, exception, traceback):
+    sys.__excepthook__(cls, exception, traceback)
+
 
 def main():
     """Непосредственно запуск приложения"""
+    sys.excepthook = except_hook
     app = QApplication(sys.argv)
     ex = MainWindow()
     ex.show()
