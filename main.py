@@ -15,15 +15,6 @@ from PyQt5.QtWidgets import QApplication, QPushButton, QLabel, \
 from tools import *
 
 
-def win_check(matrix):
-    """Проверка позиции кирпичиков на соответствие выйгрышной позиции"""
-    for i in range(len(matrix)):
-        for j in range(len(matrix[i])):
-            if (i, j) != matrix[i][j]:
-                return False
-    return True
-
-
 """
 В коде программы ниже представлены классы для различных обьектов,
 которые используются в программе в качестве виджетов.
@@ -271,12 +262,6 @@ class MainWindow(QMainWindow):
         info_btn.installEventFilter(self)
 
         self.window_widgets["main_menu"].append(info_btn)
-        # КНОПКА ТЁМНОЙ ТЕМЫ (в след. версии):
-        # switch_mode_btn = PictureButton(self, way='data/icons/switch_btn.svg')
-        #
-        # self.window_widgets["main_menu"].append(switch_mode_btn)
-        # switch_mode_btn.id = SWITCH_MODE_BTN_ID
-        # switch_mode_btn.installEventFilter(self)
 
         """ ИНИЦИАЛИЗАЦИЯ НАСТРОЕК ПРИЛОЖЕНИЯ (Сложности игры) """
 
@@ -334,7 +319,16 @@ class MainWindow(QMainWindow):
 
         self.window_widgets["settings"].append(difficulty_hard)
 
-        # ---регулеровка звука с помощью слайдеров (работа с PyQTGraph в будующем)---
+        dark_button = MyButton('', self)
+        dark_button.id = DARK_MODE_BTN_ID
+        dark_button.setFont(COOL_FONT)
+        dark_button.resize(SIZE // 10, SIZE // 10)
+        dark_button.move(SIZE // 100 * 95, SIZE // 100 * 95)
+        dark_button.installEventFilter(self)
+
+        self.window_widgets["settings"].append(dark_button)
+
+        # # ---регулеровка звука с помощью слайдеров (работа с PyQTGraph в будующем)---
         # volume_lbl = QLabel('Звук', self)
         # volume_lbl.resize(200, 50)
         # volume_lbl.move(220, 230)
@@ -403,8 +397,6 @@ class MainWindow(QMainWindow):
         self.window_widgets["tips"].append(arrows)
 
         explanation_to_arrows = QLabel('', self)
-        # explanation_to_arrows.resize(255, 50)
-        # explanation_to_arrows.move(200, 85)
         explanation_to_arrows.resize(int(SIZE // 2.5 + SIZE // 6.25), SIZE // 10)
         explanation_to_arrows.move(int(SIZE // 2.5), int(SIZE // 6.25 + SIZE // 100))
         font = QtGui.QFont('Arial', int(f'{SIZE // 50 + SIZE // 166}'))
@@ -417,8 +409,6 @@ class MainWindow(QMainWindow):
         self.window_widgets["tips"].append(explanation_to_arrows)
 
         reference = QPlainTextEdit('', self)
-        # reference.move(10, 175)
-        # reference.resize(480, 305)
         reference.resize(int(SIZE // 1.25 + SIZE // 6.25), int(SIZE // 1.6 + SIZE // 100))
         reference.move(SIZE // 50, int(SIZE // 5 + SIZE // 6.6))
         reference.setStyleSheet(
@@ -552,12 +542,6 @@ class MainWindow(QMainWindow):
             self.cords_mtx.append(cords)
             self.window_widgets["game"].append(images)
 
-        # big_picture = QLabel(self)
-        # big_picture.move(5, 5)
-        # pix_map = pix_map.scaled(SIZE + 5 * (i - 1), SIZE + 5 * (j - 1))
-        # big_picture.resize(SIZE + 5 * i, SIZE + 5 * j)
-        # big_picture.setPixmap(pix_map)
-        # big_picture.hide()
         self.setFixedSize(5 + SIZE + 5 * i, 5 + SIZE + 5 * j)
         self.field_generation()
 
@@ -757,43 +741,6 @@ class MainWindow(QMainWindow):
             return True
         return False
 
-    # функции для работы с тёмной темой для след. версии:
-
-    # def set_mode(self):
-    #     global DARK_MODE
-    #     if not DARK_MODE:
-    #         DARK_MODE = True
-    #         self.setStyleSheet(open('data/dark_styles.css').read())
-    #         for i in self.window_widgets:
-    #             for j in self.window_widgets[i]:
-    #                 if isinstance(j, MyButton):
-    #                     j.setStyleSheet(f"""
-    #                             background: #1a1a1a;
-    #                             color: #e8e8e8;
-    #                             border-radius: {SIZE // 50 + SIZE // 100}px;
-    #                     """)
-    #                 else:
-    #                     j.setStyleSheet("""
-    #                             background-color: #1a1a1a;
-    #                             color: #f5f5f5;
-    #                     """)
-    #     else:
-    #         DARK_MODE = False
-    #         self.setStyleSheet(open('data/styles.css').read())
-    #         for i in self.window_widgets:
-    #             for j in self.window_widgets[i]:
-    #                 if isinstance(j, MyButton):
-    #                     j.setStyleSheet(f"""
-    #                             background: #e8e8e8;
-    #                             color: #1a1a1a;
-    #                             border-radius: {SIZE // 50 + SIZE // 100}px;
-    #                     """)
-    #                 else:
-    #                     j.setStyleSheet("""
-    #                             background-color: #f5f5f5;
-    #                             color: #1a1a1a;
-    #                     """)
-
     def keyPressEvent(self, event):
         """С помощью имеющихся в Qt QKeyEvent и keyPressEvent
          реализовано управление стрелочками"""
@@ -862,6 +809,30 @@ class MainWindow(QMainWindow):
                                            'Изображение '
                                            '(*.jpg *.png *.gif *.tif *.tiff'
                                            ' *.bmp *.jpeg *.dib *.raw *.svg)')[0]
+
+    # def do_draw(self):
+    #     self.is_drawing = True
+    #     for i in range(SIZE * 2):
+    #         self._i = i
+    #         self.repaint()
+    #     self.is_drawing = False
+    #
+    # def paintEvent(self, event):
+    #     if self.is_drawing:
+    #         qp = QPainter()
+    #         qp.begin(self)
+    #         self.modeChangeAnimation(qp, SIZE, SIZE, self._i, self._i)
+    #         qp.end()
+    #
+    # def modeChangeAnimation(self, qp, x, y, w, h):
+    #     color = QColor('#121212')
+    #     qp.setPen(QPen(color, -1))
+    #     qp.setBrush(color)
+    #     qp.drawEllipse(x, y, w, h)
+
+
+def except_hook(cls, exception, traceback):
+    sys.__excepthook__(cls, exception, traceback)
 
 
 def main():

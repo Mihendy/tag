@@ -11,15 +11,15 @@ GO_TO_MAIN_MENU_BTN_ID = 4
 EASY_BTN_ID = 5
 NORMAL_BTN_ID = 6
 HARD_BTN_ID = 7
-tips_BTN_ID = 8
-LEADER_BOARD_BTN_ID = 9
-VERSION = 'V 1.0 By Igorase & Mihendy'
+LEADER_BOARD_BTN_ID = 8
+DARK_MODE_BTN_ID = 9
+VERSION = 'V 1.1 By Igorase & Mihendy'
 
 COOL_FONT = QtGui.QFont("Clickuper", SIZE // 250 + SIZE // 50, QtGui.QFont.Bold, False)
 
 
 def win_check(matrix):
-    """Для победы все кирпичики должны стоять на своём месте, этот факт тут проверяется"""
+    """Проверка позиции кирпичиков на соответствие выйгрышной позиции"""
     for i in range(len(matrix)):
         for j in range(len(matrix[i])):
             if (i, j) != matrix[i][j]:

@@ -1,0 +1,98 @@
+QMainWindow {
+    background-color: #121212;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+SubTitle {
+    color: gray;
+    font-size: 20pt;
+    border: 2px solid gray;
+    border-radius: 10px;
+}
+
+SubTitle:hover {
+    border-radius: 15px;
+    font-size: 15pt;
+}
+
+Title {
+    color: #e8e8e8;
+    font-bold: bold;
+}
+
+
+QStatusBar {
+    background: #121212;
+    color: white;
+    font-size: 8pt;
+    font-bold: bold;
+}
+
+QHBoxLayout {
+    border: 2px solid black;
+}
+
+QSlider::groove:horizontal {
+    height: 10px;
+    margin: 0px;
+    border-radius: 5px;
+    background: #B0AEB1;
+}
+
+MyButton {
+    background: #1a1a1a;
+    color: #e8e8e8;
+
+}
+
+MyButton::hover {
+    background: #e4e4e4;
+    color: #1a1a1a;
+}
+
+
+QSlider::handle:horizontal {
+    background: #fff;
+    border: 1px solid #E3DEE2;
+    width: 17px;
+    margin: -5px 0;
+    border-radius: 8px;
+}
+
+QSlider::sub-page:qlineargradient {
+    background: #ff7e00;
+}
+
+QTableWidget QTableCornerButton::section {
+    background: #121212;
+    border: 1px solid #cfcfcf;
+}
+
+QTableWidget {
+    background-color: #121212;
+    color: white;
+    gridline-color: #cfcfcf;
+    border: 1px solid #cfcfcf;
+}
+
+QTableWidget::item {
+    background-color: #121212;
+    gridline-color: #cfcfcf;
+    border: 1px solid #cfcfcf;
+}
+
+QHeaderView, QHeaderView::section{
+    background-color: #121212;
+    border: 1px solid #cfcfcf;
+    color: white;
+}
+
+Frame {
+    background-color: gray;
+    border: 1px solid white;
+}
+
+
