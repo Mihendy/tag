@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from PyQt5 import QtGui
+from PyQt5.QtWidgets import QGraphicsDropShadowEffect
 
 SIZE = 900
 
@@ -59,7 +60,7 @@ def make_game_files(obj, directory_name='data'):
                     id         INTEGER PRIMARY KEY ASC AUTOINCREMENT
                                NOT NULL,
                     name       STRING,
-                    difficulty STRING  NOT NULL,
+                    field_size STRING  NOT NULL,
                     time               NOT NULL);''')
             obj.con.commit()
         except sqlite3.OperationalError:
@@ -67,3 +68,13 @@ def make_game_files(obj, directory_name='data'):
         except sqlite3.DatabaseError:
             pass
     obj.cur = obj.con.cursor()
+
+
+def shadowEffect(widget, color: QtGui.QColor):
+    """Эффект теневого размытия"""
+    shadow = QGraphicsDropShadowEffect()
+    shadow.setBlurRadius(10)
+    shadow.setXOffset(0)
+    shadow.setYOffset(0)
+    shadow.setColor(color)
+    widget.setGraphicsEffect(shadow)
